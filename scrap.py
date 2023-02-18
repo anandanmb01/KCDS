@@ -4,14 +4,21 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.options import Options
 import urllib.request
 import base64
 from PIL import Image
 from io import BytesIO
 import pytesseract
 
+# Create an instance of ChromeOptions
+chrome_options = Options()
 
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+# Set Chrome to run in headless mode
+chrome_options.add_argument('--headless')
+
+# driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=chrome_options)
 driver.get("https://www.sec.kerala.gov.in/public/voters/list")
 
 
