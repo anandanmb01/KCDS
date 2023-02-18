@@ -49,8 +49,15 @@ img = Image.open(BytesIO(img_blob_bytes))
 text = pytesseract.image_to_string(img, lang='eng')
 print(text)
 
-img.show()
+# img.show()
 # img.save('output.png')
+
+district_tab=driver.find_element(By.XPATH,"/html/body/div[1]/div/section/div/div/div/div[1]/form/div/div[1]/div/a").click()
+district_list=driver.find_element(By.XPATH,"/html/body/div[1]/div/section/div/div/div/div[1]/form/div/div[1]/div/div/ul")
+district_list_entry=district_list.find_elements(By.CLASS_NAME,"active-result")
+
+# print(district_list_entry.get_attribute('innerHTML'))
+print(district_list_entry)
 
 # input()
 
