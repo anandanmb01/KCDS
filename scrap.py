@@ -47,6 +47,9 @@ def mouseup(driver,element):
     action_chains.release()
     action_chains.perform()
 
+def getText(element):
+    return element.text.split('-')[-1].strip()
+
 js_script = """
 var imageElement = document.evaluate("/html/body/div[1]/div/section/div/div/div/div[1]/form/div/div[6]/div[2]/div/div[1]/img", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 
@@ -85,9 +88,12 @@ district_list_entry=district_list.find_elements(By.CLASS_NAME,"active-result")
 # print(district_list_entry)       District element list
 
 for (x,dist) in enumerate(district_list_entry):
+    if x==0:
+        continue
     time.sleep(0.3)
 
-    exec=f"""var element = document.querySelector("li.active-result:nth-child({x+2})"); var event = new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}); element.dispatchEvent(event);"""
+    # print(f'District : {getText(dist)}')
+    exec=f"""var element = document.querySelector("li.active-result:nth-child({x+1})"); var event = new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}); element.dispatchEvent(event);"""
     driver.execute_script(exec)
     localbody_tab=driver.find_element(By.XPATH,"/html/body/div[1]/div/section/div/div/div/div[1]/form/div/div[2]/div")
     mousedown(driver, localbody_tab)
@@ -97,9 +103,11 @@ for (x,dist) in enumerate(district_list_entry):
     # print(localbody_list_entry)
 
     for (y,ward) in enumerate(localbody_list_entry):
+        if y==0:
+            continue
         time.sleep(0.3)
 
-        exec=f"""var element = document.querySelector("#lbPublic_chosen > div:nth-child(2) > ul:nth-child(2) > li:nth-child({y+2})"); var event = new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}); element.dispatchEvent(event);"""
+        exec=f"""var element = document.querySelector("#lbPublic_chosen > div:nth-child(2) > ul:nth-child(2) > li:nth-child({y+1})"); var event = new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}); element.dispatchEvent(event);"""
         driver.execute_script(exec)
         ward_tab=driver.find_element(By.XPATH,'//*[@id="wardPublic_chosen"]')
         mousedown(driver, ward_tab)
@@ -109,9 +117,11 @@ for (x,dist) in enumerate(district_list_entry):
         # print(ward_list_entry)
 
         for (z,polling_station) in enumerate(ward_list_entry):
+            if z==0:
+                continue
             time.sleep(0.3)
 
-            exec=f"""var element = document.querySelector('#wardPublic_chosen > div:nth-child(2) > ul:nth-child(2) > li:nth-child({z+2})'); var event = new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}); element.dispatchEvent(event);"""
+            exec=f"""var element = document.querySelector('#wardPublic_chosen > div:nth-child(2) > ul:nth-child(2) > li:nth-child({z+1})'); var event = new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}); element.dispatchEvent(event);"""
             driver.execute_script(exec)
             polling_station_tab=driver.find_element(By.XPATH,'//*[@id="psPublic_chosen"]')
             mousedown(driver, polling_station_tab)
@@ -121,8 +131,10 @@ for (x,dist) in enumerate(district_list_entry):
             # print(polling_station_list_entry)
 
             for (t,lanugage_point) in enumerate(polling_station_list_entry):
+                if t==0:
+                    continue
                 time.sleep(0.3)
-                exec=f"""var element = document.querySelector('#psPublic_chosen > div:nth-child(2) > ul:nth-child(2) > li:nth-child({t+2})'); var event = new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}); element.dispatchEvent(event);"""
+                exec=f"""var element = document.querySelector('#psPublic_chosen > div:nth-child(2) > ul:nth-child(2) > li:nth-child({t+1})'); var event = new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}); element.dispatchEvent(event);"""
                 driver.execute_script(exec)
                 polling_station_tab=driver.find_element(By.XPATH,'//*[@id="form_language_chosen"]')
                 mousedown(driver, polling_station_tab)
@@ -135,9 +147,7 @@ for (x,dist) in enumerate(district_list_entry):
                 driver.find_element(By.XPATH,'//*[@id="form_Search"]').click()
 
 
-                # polling_station_list=driver.find_element(By.XPATH,'/html/body/div[1]/div/section/div/div/div/div[1]/form/div/div[4]/div/div')
-                # polling_station_list_entry=polling_station_list.find_elements(By.CLASS_NAME,"active-result")
-                # print(polling_station_list_entry)
+
                 break
 
 
