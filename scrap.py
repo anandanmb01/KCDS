@@ -11,11 +11,25 @@ from PIL import Image
 from io import BytesIO
 import pytesseract
 from selenium.webdriver.common.action_chains import ActionChains
+from db_util import db
+import re
+from tqdm import tqdm
+
+
+
+handler=open("error.txt","w")
+db=db('db.sqlite')
+
 
 x0=1
 y0=1
 z0=1
 t0=1
+
+d_id=0
+l_id=0
+w_id=0
+p_id=0
 
 # Create an instance of ChromeOptions
 chrome_options = Options()
@@ -23,8 +37,8 @@ chrome_options = Options()
 # Set Chrome to run in headless mode
 chrome_options.add_argument('--headless')
 
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-# driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=chrome_options)
+# driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=chrome_options)
 driver.get("https://www.sec.kerala.gov.in/public/voters/list")
 
 
@@ -84,7 +98,7 @@ def scrap() :
     img_blob_bytes = base64.b64decode(img_blob_string)
     img = Image.open(BytesIO(img_blob_bytes))
     captcha_text = pytesseract.image_to_string(img, lang='eng').replace("\n", "")
-    print(captcha_text)
+    # print(captcha_text)
 
     # img.show()
     # img.save('output.png')
@@ -103,6 +117,7 @@ def scrap() :
         time.sleep(0.3)
 
         # print(f'District : {getText(dist)}')
+        d_id=db.insert_district(getText(dist))[0][0]
         exec=f"""var element = document.querySelector("li.active-result:nth-child({x+1})"); var event = new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}); element.dispatchEvent(event);"""
         driver.execute_script(exec)
         localbody_tab=driver.find_element(By.XPATH,"/html/body/div[1]/div/section/div/div/div/div[1]/form/div/div[2]/div")
@@ -117,6 +132,7 @@ def scrap() :
                 continue
             time.sleep(0.3)
 
+            l_id=db.insert_localbodie(getText(ward), d_id)[0][0]
             exec=f"""var element = document.querySelector("#lbPublic_chosen > div:nth-child(2) > ul:nth-child(2) > li:nth-child({y+1})"); var event = new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}); element.dispatchEvent(event);"""
             driver.execute_script(exec)
             ward_tab=driver.find_element(By.XPATH,'//*[@id="wardPublic_chosen"]')
@@ -131,6 +147,7 @@ def scrap() :
                     continue
                 time.sleep(0.3)
 
+                w_id=db.insert_ward(getText(polling_station), l_id)[0][0]
                 exec=f"""var element = document.querySelector('#wardPublic_chosen > div:nth-child(2) > ul:nth-child(2) > li:nth-child({z+1})'); var event = new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}); element.dispatchEvent(event);"""
                 driver.execute_script(exec)
                 polling_station_tab=driver.find_element(By.XPATH,'//*[@id="psPublic_chosen"]')
@@ -144,6 +161,8 @@ def scrap() :
                     if t<t0:
                         continue
                     time.sleep(0.3)
+                    
+                    p_id=db.insert_polling_station(getText(lanugage_point), w_id)[0][0]
                     exec=f"""var element = document.querySelector('#psPublic_chosen > div:nth-child(2) > ul:nth-child(2) > li:nth-child({t+1})'); var event = new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}); element.dispatchEvent(event);"""
                     driver.execute_script(exec)
                     polling_station_tab=driver.find_element(By.XPATH,'//*[@id="form_language_chosen"]')
@@ -161,22 +180,35 @@ def scrap() :
                         time.sleep(3)
                         table=driver.find_element(By.XPATH,"/html/body/div[1]/div/section/div/div/div/div[2]/div/div/div/div/form")
                         rows=table.find_elements(By.TAG_NAME,'tr')
-                        for entry in rows:
+                        for entry in tqdm(rows,desc=f"[{d_id},{l_id},{w_id},{p_id}] >> "):
                             cell=entry.find_elements(By.TAG_NAME,'td')
                             if len(cell) > 1:
-                                cell5=cell[5].text.split(" / ")
-                                gen=cell5[0]
-                                age=cell5[1]
-                                print(f'sl : {cell[0].text}, name : {cell[1].text.replace("DELETED ", "")}, guard : {cell[2].text}, hno : {cell[3].text}, addr : {cell[4].text}, gen : {gen}, age : {age}, idno : {cell[6].text}')
+                                try:
+                                    cell5=cell[5].text.split(" / ")
+                                    gen=cell5[0]
+                                    age=cell5[1]
+                                except:
+                                    cell5=cell[5].text.split(" / ")
+                                    gen=cell5[0]
+                                    age=""
+                                # print(f'sl : {cell[0].text}, name : {cell[1].text.replace("DELETED ", "")}, guard : {cell[2].text}, hno : cell[3].text, addr : {cell[4].text}, gen : {gen}, age : {age}, idno : {cell[6].text}, p_id : {p_id}')
+                                try:
+                                    db.insert_citizen(cell[1].text.replace("DELETED ", ""), cell[2].text, cell[3].text, cell[4].text, gen, age, cell[6].text, p_id)
+                                
+                                except:
+                                    print("error")
+                                    print(f'{cell[0].text},{cell[1].text.replace("DELETED ", "")},{cell[2].text},{cell[3].text},{cell[4].text},{gen},{age},{cell[6].text},{p_id}')
+                                    handler.write(f'{cell[0].text},{cell[1].text.replace("DELETED ", "")},{cell[2].text},{cell[3].text},{cell[4].text},{gen},{age},{cell[6].text},{p_id}\n')
+                                
                             else:
-                                pass
+                                continue
 
                             # print(entry)
 
-                    # getTableData(driver)
-                    time.sleep(3)
-                    table=driver.find_element(By.XPATH,"/html/body/div[1]/div/section/div/div/div/div[2]/div/div/div/div/form")
-                    print(table)
+                    getTableData(driver)
+                    # time.sleep(3)
+                    # table=driver.find_element(By.XPATH,"/html/body/div[1]/div/section/div/div/div/div[2]/div/div/div/div/form")
+                    # print(table)
                     driver.refresh()
                     time.sleep(2)
                     
@@ -204,6 +236,8 @@ def scrap() :
     
 scrap()
 
-input()
 
+input()
+handler.close()
+db.close()
 driver.close()
