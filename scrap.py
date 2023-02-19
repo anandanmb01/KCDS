@@ -73,7 +73,7 @@ img_blob_string = driver.execute_script("return window.dataURL;")
 img_blob_string = img_blob_string.split(',')[1]
 img_blob_bytes = base64.b64decode(img_blob_string)
 img = Image.open(BytesIO(img_blob_bytes))
-captcha_text = pytesseract.image_to_string(img, lang='eng')
+captcha_text = pytesseract.image_to_string(img, lang='eng').replace("\n", "")
 print(captcha_text)
 
 # img.show()
@@ -147,6 +147,23 @@ for (x,dist) in enumerate(district_list_entry):
                 driver.find_element(By.XPATH,'//*[@id="form_Search"]').click()
 
 
+                def  getTableData(driver):
+                    time.sleep(3)
+                    table=driver.find_element(By.XPATH,"/html/body/div[1]/div/section/div/div/div/div[2]/div/div/div/div/form")
+                    rows=table.find_elements(By.TAG_NAME,'tr')
+                    for entry in rows:
+                        cell=entry.find_elements(By.TAG_NAME,'td')
+                        if len(cell) > 1:
+                            cell5=cell[5].text.split(" / ")
+                            gen=cell5[0]
+                            age=cell5[1]
+                            print(f'sl : {cell[0].text}, name : {cell[1].text.replace("DELETED ", "")}, guard : {cell[2].text}, hno : {cell[3].text}, addr : {cell[4].text}, gen : {gen}, age : {age}, idno : {cell[6].text}')
+                        else:
+                            pass
+
+                        # print(entry)
+
+                getTableData(driver)
 
                 break
 
