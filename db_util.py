@@ -1,7 +1,5 @@
 import sqlite3
 
-
-
 class db():
     def __init__(self,url):
         try:
@@ -97,10 +95,12 @@ class db():
             return res
         
     def insert_citizen(self,name,guardian,house_no,house_name,gender,age,id_card_no,pid):
-        self.cursor.execute(f"""
-                            insert into citizens (name,guardian,house_no,house_name,gender,age,id_card_no,p_id)
-                            values ('{name}','{guardian}',{house_no},'{house_name}','{gender}',{int(age)},'{id_card_no}',{int(pid)})
-                            """)
+        # use a parameterized SQL query with placeholders
+        sql = "INSERT INTO citizens (name, guardian, house_no, house_name, gender, age, id_card_no, p_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        # print(sql)
+        # execute the SQL command with the values as parameters
+        self.cursor.execute(sql, (name, guardian, house_no, house_name, gender, age, id_card_no, pid))
+
 
 
         
